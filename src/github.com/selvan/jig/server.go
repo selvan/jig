@@ -1,12 +1,19 @@
 package main
 
 import (
-    "fmt"
     "os"
     "io/ioutil"
     "net/http"
     "strings"
+    "path/filepath"
 )
+
+var pwd, _ = os.Getwd()
+
+type FileDetail struct {
+	name string
+	path string
+}
 
 func stat(path string) (isExist bool, info os.FileInfo, _ error) {
     fileInfo, err := os.Stat(path)
@@ -15,46 +22,53 @@ func stat(path string) (isExist bool, info os.FileInfo, _ error) {
     return false, nil, err
 }
 
-func webPage(path string) (string) {
+func webPage(path string) ([]byte) {
 	exist, info, _ := stat(path)
 
 	if ! exist {
-		return "<html><h3>Error!! Not exist </h3></html>"
+		return  []byte("<html><h3>Error!! Not exist </h3></html>")
 	}
 
 	if ! info.IsDir() {
 	   body, err := ioutil.ReadFile(path)
-	   if err != nil { return "System error :: Unable to processes " + path }
-	   return string(body)
+	   if err != nil { return []byte("System error :: Unable to processes " + path) }
+	   return body
 	}
 
 	files := loadDir(path)
+	fileLinks := []string{}
 
-	for index, filename := range files { files[index] = "<a href='" + filename + "'>" + filename+ "</a>" }
+	for _, fileDetail := range files { fileLinks = append(fileLinks, "<a href='/" + fileDetail.path + "'>" + fileDetail.name + "</a>")  }
 
-	return strings.Join(files, " <br/>")
+	return  []byte(strings.Join(fileLinks, " <br/>"))
 }
 
 
-func loadDir(path string) ([]string) {	
+func loadDir(path string) ([]FileDetail) {	
 
-	_files := []string{}
+	_files := []FileDetail{}
 
-    files, _ := ioutil.ReadDir(path)
-    for _, f := range files {
-    		_files = append(_files, f.Name());            
+    children, _ := ioutil.ReadDir(path)
+
+
+    for _, f := range children {
+    		fullPath := path + string(os.PathSeparator) + f.Name()
+
+    		_files = append(_files, FileDetail{name:  f.Name(), path: fullPath});
     }
 
 	return _files
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
+
 	urlPath := r.URL.Path[1:]
+
 	if urlPath == "" {
-		urlPath = "./"
+		urlPath, _ = filepath.Rel(pwd, pwd)
 	}
 
-	fmt.Fprintf(w, webPage(urlPath))
+	w.Write(webPage(urlPath))
 }
 
 func main() {
