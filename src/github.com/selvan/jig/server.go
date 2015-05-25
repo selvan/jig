@@ -11,7 +11,7 @@ import (
 )
 
 var pwd, _ = os.Getwd()
-var port = flag.String("p", "8080", "Port to listen. Default 8080")
+var port = flag.String("p", "8080", "Port to listen. Default set to 8080")
 
 type FileDetail struct {
 	name string
@@ -85,6 +85,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 func main() {
     flag.Parse()
     http.HandleFunc("/", handler)
+    fmt.Println("Welcomg to jig, a tiny web server")
     fmt.Println("Listing on port :", *port)
     http.ListenAndServe(":" + *port, nil)
 }
