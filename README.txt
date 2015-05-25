@@ -7,6 +7,7 @@
 * export GOPATH=`pwd`
 * export PATH=$PATH:$GOPATH/bin
 * go install github.com/selvan/jig
+* bin/jig
 
 ### Usage ##
 * Copy jig binary to any folder and run
